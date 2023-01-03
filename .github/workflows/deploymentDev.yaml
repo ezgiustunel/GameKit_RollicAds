@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       gameKitVersion:
-        description: 'v1.0.0_GameKit'
+        description: 'v1.0.0_GameKit_internal'
         required: true
   push:
     branches:
@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
+          sed -i 's+TEMP_GAMEKIT_VERSION+v1.0.0_internal+g' "./Assets/RollicGames/Editor/GameKitVersion.cs"
+          sed -i 's+TEMP_GAMEKIT_VERSION+v1.0.0_internal+g' "./Assets/RollicGames/VersionGameKit.cs"
+          
           find ./Assets/ExternalDependencyManager -name \*.meta >> metaList
           find ./Assets/MaxSdk -name \*.meta >> metaList
           find ./Assets/Plugins -name \*.meta >> metaList
@@ -29,7 +32,27 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           path: a/GameKit_RollicAds.unitypackage
-          name: GameKit_RollicAds.unitypackage
+          name: GameKit_RollicAds.unitypackage     
+          
+          
+          
+      - name: Sync to S3
+        uses: jakejarvis/s3-sync-action@master
+        env:
+          AWS_S3_BUCKET: ${{ secrets.SDK_AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SDK_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SDK_AWS_SECRET_KEY }}
+          AWS_REGION: 'us-east-1'
+          SOURCE_DIR: 'a/'
+          DEST_DIR: 'dev/v1.0.0_internal/'
+      - name: Invalidate
+        uses: chetan/invalidate-cloudfront-action@master
+        env:
+          DISTRIBUTION: ${{ secrets.SDK_DISTRIBUTION }}
+          PATHS: '/'
+          AWS_REGION: 'us-east-1'
+          AWS_ACCESS_KEY_ID: ${{ secrets.SDK_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SDK_AWS_SECRET_KEY }}
 
       
       
