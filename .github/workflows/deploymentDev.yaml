@@ -1,0 +1,35 @@
+name: Create GameKit Unity Package
+on:
+  workflow_dispatch:
+    inputs:
+      gameKitVersion:
+        description: 'v1.0.0_GameKit'
+        required: true
+  push:
+    branches:
+      - dev
+
+jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          find ./Assets/ExternalDependencyManager -name \*.meta >> metaList
+          find ./Assets/MaxSdk -name \*.meta >> metaList
+          find ./Assets/Plugins -name \*.meta >> metaList
+          find ./Assets/RollicGames -name \*.meta >> metaList
+      - run: mkdir a
+        
+      - uses: pCYSl5EDgo/create-unitypackage@master
+        with:
+          package-path: 'a/GameKit.unitypackage'
+          include-files: metaList
+      - uses: actions/upload-artifact@master
+        with:
+          path: a/GameKit.unitypackage
+          name: GameKit.unitypackage
+
+      
+      
+
