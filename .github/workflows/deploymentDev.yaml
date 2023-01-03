@@ -17,17 +17,18 @@ jobs:
       - run: |
           find ./Assets/ExternalDependencyManager -name \*.meta >> metaList
           find ./Assets/MaxSdk -name \*.meta >> metaList
+          find ./Assets/Plugins -name \*.meta >> metaList
           find ./Assets/RollicGames -name \*.meta >> metaList
       - run: mkdir a
         
       - uses: pCYSl5EDgo/create-unitypackage@master
         with:
-          package-path: 'a/GameKit.unitypackage'
+          package-path: 'a/GameKit_RollicAds.unitypackage'
           include-files: metaList
       - uses: actions/upload-artifact@master
         with:
-          path: a/GameKit.unitypackage
-          name: GameKit.unitypackage
+          path: a/GameKit_RollicAds.unitypackage
+          name: GameKit_RollicAds.unitypackage
 
       
       
