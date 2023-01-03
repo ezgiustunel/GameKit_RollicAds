@@ -15,10 +15,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
+          echo "Assets/ExternalDependencyManager.meta" > metaList
           find ./Assets/ExternalDependencyManager -name \*.meta >> metaList
+          
+          echo "Assets/MaxSdk.meta" > metaList
           find ./Assets/MaxSdk -name \*.meta >> metaList
+          
+          echo "Assets/Plugins.meta" > metaList
           find ./Assets/Plugins -name \*.meta >> metaList
+          
+          echo "Assets/RollicGames.meta" > metaList
           find ./Assets/RollicGames -name \*.meta >> metaList
+          
       - run: mkdir a
         
       - uses: pCYSl5EDgo/create-unitypackage@master
