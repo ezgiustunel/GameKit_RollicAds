@@ -34,8 +34,6 @@ jobs:
           path: a/GameKit_RollicAds.unitypackage
           name: GameKit_RollicAds.unitypackage     
           
-          
-          
       - name: Sync to S3
         uses: jakejarvis/s3-sync-action@master
         env:
@@ -44,7 +42,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SDK_AWS_SECRET_KEY }}
           AWS_REGION: 'us-east-1'
           SOURCE_DIR: 'a/'
-          DEST_DIR: 'dev/v1.0.0_internal/'
+          DEST_DIR: 'gameKitDev/v1.0.0_internal/'
       - name: Invalidate
         uses: chetan/invalidate-cloudfront-action@master
         env:
