@@ -17,7 +17,6 @@ jobs:
       - run: |
           find ./Assets/ExternalDependencyManager -name \*.meta >> metaList
           find ./Assets/MaxSdk -name \*.meta >> metaList
-          find ./Assets/Plugins -name \*.meta >> metaList
           find ./Assets/RollicGames -name \*.meta >> metaList
       - run: mkdir a
         
