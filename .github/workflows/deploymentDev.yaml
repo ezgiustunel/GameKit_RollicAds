@@ -15,11 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checkout the repository to the GitHub Actions runner
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GAMEKIT_ROLLICADS }}
-          submodules: true
+      
       
       # Update references
       - name: Git Submodule Update
