@@ -14,14 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          mkdir -p $HOME/.ssh
-          echo '${{ secrets.Rollic }}' > $HOME/.ssh/ssh.key
-          chmod 600 $HOME/.ssh/ssh.key
-          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/ssh.key"
           git submodule set-url submodules/UnityFacebookSDK git@github.com:ezgiustunel/UnityFacebookSDK.git
           git submodule update --init --recursive
-          git submodule set-url submodules/UnityFacebookSDK git@github.com:ezgiustunel/UnityFacebookSDK.git
-          unset GIT_SSH_COMMAND   
+          git submodule set-url submodules/UnityFacebookSDK git@github.com:ezgiustunel/UnityFacebookSDK.git 
 
       
       
