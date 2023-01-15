@@ -16,9 +16,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Checkout submodules
+        uses: textbook/git-checkout-submodule-action@master
         with:
-          submodules: 'true'
-          token: ${{ secrets.GAMEKIT_ROLLICADS }}
+          remote: true
         
         
         
