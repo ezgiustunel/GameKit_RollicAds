@@ -13,7 +13,6 @@ jobs:
   echo:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone Submodule
       - run: |
           mkdir -p $HOME/.ssh
           echo '${{ secrets.Rollic }}' > $HOME/.ssh/ssh.key
