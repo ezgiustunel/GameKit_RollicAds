@@ -11,13 +11,15 @@ on:
 
 jobs:
   echo:
+    
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          cd submodules
-          git submodule set-url submodules/UnityFacebookSDK git@github.com:ezgiustunel/UnityFacebookSDK.git
-          git submodule update --init --recursive
-          git submodule set-url submodules/UnityFacebookSDK git@github.com:ezgiustunel/UnityFacebookSDK.git 
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+          token: ${{ secrets.Rollic }}
+ 
 
       
       
