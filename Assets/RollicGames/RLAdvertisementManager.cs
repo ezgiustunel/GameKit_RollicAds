@@ -10,6 +10,8 @@ using com.adjust.sdk;
 using ElephantSDK;
 using RollicGames.Advertisements.Ads;
 using RollicGames.Advertisements.Model;
+using Firebase;
+using Firebase.Analytics;
 #if UNITY_IOS && !UNITY_EDITOR
 using UnityEngine.iOS;
 #endif
@@ -29,7 +31,7 @@ namespace RollicGames.Advertisements
         public static event Action<string> OnRollicAdsAdExpandedEvent;
         public static event Action<string> OnRollicAdsAdCollapsedEvent;
         public static event Action<string> OnRollicAdsInterstitialLoadedEvent;
-        public static event Action<string> OnRollicAdsInterstitialFailedEvent;
+        public static event Action<IronSourceError> OnRollicAdsInterstitialFailedEvent;
         public static event Action OnRollicAdsInterstitialDismissedEvent;
         public static event Action<string> OnRollicAdsInterstitialExpiredEvent;
         public static event Action OnRollicAdsInterstitialShownEvent;
@@ -106,18 +108,16 @@ namespace RollicGames.Advertisements
 #endif
         }
 
-        public void init(bool isDebugEnabled = false)
+        public void init(string appKey = "", bool isDebugEnabled = false)
         {
             _appKey = RollicApplovinIDs.AppKey;
             _isDebugEnabled = isDebugEnabled;
             
-#if UNITY_EDITOR
-            //no op
-#elif UNITY_IOS
+#if UNITY_IOS
             _bannerAdUnit = RollicApplovinIDs.BannerAdUnitIos;
             _interstitialAdUnit = RollicApplovinIDs.InterstitialAdUnitIos;
             _rewardedVideoAdUnit = RollicApplovinIDs.RewardedAdUnitIos;
-#elif UNITY_ANDROID
+#elif UNITY_ANDROID || UNITY_EDITOR
             _bannerAdUnit = RollicApplovinIDs.BannerAdUnitAndroid;
             _interstitialAdUnit = RollicApplovinIDs.InterstitialAdUnitAndroid;
             _rewardedVideoAdUnit = RollicApplovinIDs.RewardedAdUnitAndroid;
@@ -265,10 +265,10 @@ namespace RollicGames.Advertisements
         {
             _isInterstitialReady = false;
             StartCoroutine(RequestInterstitialAgain());
-
-            Elephant.AdEvent("OnInterstitialFailedEvent", adUnitId, errorInfo.Message);
+            IronSourceError error = new IronSourceError(errorInfo.MediatedNetworkErrorCode, errorInfo.Message);
+            Elephant.AdEvent("OnInterstitialFailedEvent", adUnitId, error.getDescription());
             var evnt = OnRollicAdsInterstitialFailedEvent;
-            evnt?.Invoke(errorInfo.Message);
+            evnt?.Invoke(error);
         }
         
         private void OnInterstitialShownEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
@@ -444,6 +444,19 @@ namespace RollicGames.Advertisements
             adRevenue.addCallbackParameter("creative_id", adInfo.CreativeIdentifier);
 
             Adjust.trackAdRevenue(adRevenue);
+            
+            double revenueAsDoubleObject = adInfo.Revenue;
+            var impressionParameters = new[] {
+                new Parameter("ad_platform", "applovin_max"),
+                new Parameter("ad_source", adInfo.NetworkName),
+                new Parameter("ad_unit_name", adInfo.AdUnitIdentifier),
+                new Parameter("ad_format", adFormat),
+                new Parameter("value", revenueAsDoubleObject),
+                new Parameter("currency","USD"),
+            };
+            
+            FirebaseAnalytics.LogEvent("ad_impression", impressionParameters);
+            FirebaseAnalytics.LogEvent("custom_ad_impression", impressionParameters);
         }
 
         #endregion

@@ -1,0 +1,134 @@
+name: Create Unity Package
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract elephantSdkVersion
+        id: elephantSdkVersion
+        uses: actions/github-script@0.2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
+          script: |
+            const tag = context.payload.ref.replace('refs/tags/', '');
+            const versions = tag.split("-");
+            return versions[0];  
+      - name: Extract adsSdkVersion
+        id: adsSdkVersion
+        uses: actions/github-script@0.2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
+          script: |
+            const tag = context.payload.ref.replace('refs/tags/', '');
+            const versions = tag.split("-");
+            return versions[1];
+      - uses: actions/checkout@v2
+      - run: |
+          export GIT_TAG_ELEPHANT=${{ steps.elephantSdkVersion.outputs.result }} 
+          export GIT_TAG_ADS=${{ steps.adsSdkVersion.outputs.result }}
+          
+          hashedCode=`sudo sha256sum "./Assets/RollicGames/RLAdvertisementManager.cs" | cut -d ' ' -f 1`
+          
+          sed -i "s/TEMP_HASHED_CLASS_CODE/${hashedCode}/g" "./Assets/RollicGames/Editor/CodeControlUtils.cs"
+          
+          sed -i "s/TEMP_ELEPHANT_VERSION/${GIT_TAG_ELEPHANT}/g" "./Assets/Elephant/Core/ElephantVersion.cs"
+          sed -i "s/TEMP_ELEPHANT_VERSION/${GIT_TAG_ELEPHANT}/g" "./Assets/Elephant/Editor/ElephantVersion.cs"
+          sed -i "s/TEMP_ADS_VERSION/${GIT_TAG_ADS}/g" "./Assets/RollicGames/Editor/AdsSdkVersion.cs"
+          sed -i "s/TEMP_ADS_VERSION/${GIT_TAG_ADS}/g" "./Assets/RollicGames/Version.cs"
+          
+          echo "Assets/Elephant.meta" > metaList
+          find ./Assets/Elephant/ -name \*.meta >> metaList
+          echo "Assets/RollicGames.meta" > mediationMetaList
+          find ./Assets/RollicGames/ -name \*.meta >> mediationMetaList
+          
+          
+          
+          sed -i "s/TEMP_ELEPHANT_SDK_VERSION/${GIT_TAG_ELEPHANT}/g" "./Assets/Elephant/ElephantSdkManagerManifest.json"
+          
+          sed -i "s/TEMP_ELEPHANT_SDK_VERSION/${GIT_TAG_ELEPHANT}/g" "./Assets/Elephant/ElephantSdkManagerManifestWithAds.json"
+          sed -i "s/TEMP_ADS_SDK_VERSION/${GIT_TAG_ADS}/g" "./Assets/Elephant/ElephantSdkManagerManifestWithAds.json"
+      - run: mkdir a
+      - run: |
+          cd a
+          cat "../Assets/Elephant/ElephantSdkManagerManifest.json" >> ElephantSdkManagerManifest.json
+          cat "../Assets/Elephant/ElephantSdkManagerManifestWithAds.json" >> ElephantSdkManagerManifestWithAds.json
+          cd ..
+      - uses: actions/upload-artifact@master
+        with:
+          path: a/ElephantSdkManagerManifest.json
+          name: ElephantSdkManagerManifest.json
+      - uses: actions/upload-artifact@master
+        with:
+          path: a/ElephantSdkManagerManifestWithAds.json
+          name: ElephantSdkManagerManifestWithAds.json
+
+      - uses: pCYSl5EDgo/create-unitypackage@master
+        with:
+          package-path: 'a/ElephantSDK.unitypackage'
+          include-files: metaList
+      - uses: actions/upload-artifact@master
+        with:
+          path: a/ElephantSDK.unitypackage
+          name: ElephantSDK.unitypackage
+
+      - uses: pCYSl5EDgo/create-unitypackage@master
+        with:
+          package-path: 'a/RollicGamesMopub.unitypackage'
+          include-files: mediationMetaList
+      - uses: actions/upload-artifact@master
+        with:
+          path: a/RollicGamesMopub.unitypackage
+          name: RollicGamesMopub.unitypackage
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEVOPS_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset (ElephantSDK)
+        id: upload-release-asset-elephant
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEVOPS_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: a/ElephantSDK.unitypackage
+          asset_name: ElephantSDK.unitypackage
+          asset_content_type: application/x-gzip
+      - name: Upload Release Asset (MediationSDK)
+        id: upload-release-asset-mediation
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEVOPS_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: a/RollicGamesMopub.unitypackage
+          asset_name: RollicGamesMopub.unitypackage
+          asset_content_type: application/x-gzip
+      - name: Sync to S3
+        uses: jakejarvis/s3-sync-action@master
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: 'us-east-1'
+          SOURCE_DIR: 'a/'
+          DEST_DIR: 'elephant_v1_12/'
+      - name: Invalidate
+        uses: chetan/invalidate-cloudfront-action@master
+        env:
+          DISTRIBUTION: ${{ secrets.DISTRIBUTION }}
+          PATHS: '/'
+          AWS_REGION: 'us-east-1'
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

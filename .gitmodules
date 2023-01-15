@@ -1,0 +1,3 @@
+[submodule "submodules/UnityFacebookSDK"]
+	path = submodules/UnityFacebookSDK
+	url = git@github.com:ezgiustunel/UnityFacebookSDK.git

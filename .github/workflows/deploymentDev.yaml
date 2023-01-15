@@ -14,43 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Clone Submodule
       - run: |
-          sed -i 's+TEMP_GAMEKIT_VERSION+v1.0.0_internal+g' "./Assets/RollicGames/Editor/GameKitVersion.cs"
-          sed -i 's+TEMP_GAMEKIT_VERSION+v1.0.0_internal+g' "./Assets/RollicGames/VersionGameKit.cs"
-          
-          find ./Assets/ExternalDependencyManager -name \*.meta >> metaList
-          find ./Assets/MaxSdk -name \*.meta >> metaList
-          find ./Assets/Plugins -name \*.meta >> metaList
-          find ./Assets/RollicGames -name \*.meta >> metaList
-          
-      - run: mkdir a
-        
-      - uses: pCYSl5EDgo/create-unitypackage@master
-        with:
-          package-path: 'a/GameKit_RollicAds.unitypackage'
-          include-files: metaList
-      - uses: actions/upload-artifact@master
-        with:
-          path: a/GameKit_RollicAds.unitypackage
-          name: GameKit_RollicAds.unitypackage     
-          
-      - name: Sync to S3
-        uses: jakejarvis/s3-sync-action@master
-        env:
-          AWS_S3_BUCKET: ${{ secrets.SDK_AWS_S3_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.SDK_AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.SDK_AWS_SECRET_KEY }}
-          AWS_REGION: 'us-east-1'
-          SOURCE_DIR: 'a/'
-          DEST_DIR: 'gameKitDev/v1.0.0_internal/'
-      - name: Invalidate
-        uses: chetan/invalidate-cloudfront-action@master
-        env:
-          DISTRIBUTION: ${{ secrets.SDK_DISTRIBUTION }}
-          PATHS: '/'
-          AWS_REGION: 'us-east-1'
-          AWS_ACCESS_KEY_ID: ${{ secrets.SDK_AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.SDK_AWS_SECRET_KEY }}
+          mkdir -p $HOME/.ssh
+          echo '${{ secrets.Rollic }}' > $HOME/.ssh/ssh.key
+          chmod 600 $HOME/.ssh/ssh.key
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/ssh.key"
+          git submodule set-url submodules/UnityFacebookSDK git@github.com:ezgiustunel/UnityFacebookSDK.git
+          git submodule update --init --recursive
+          git submodule set-url submodules/UnityFacebookSDK git@github.com:ezgiustunel/UnityFacebookSDK.git
+          unset GIT_SSH_COMMAND   
 
       
       

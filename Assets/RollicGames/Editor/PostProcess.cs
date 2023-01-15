@@ -86,6 +86,10 @@ namespace RollicGames.Editor
             var podPath = System.IO.Path.Combine(pathToBuiltProject, "Podfile");
             var content = File.ReadAllText(podPath);
             content = content.Replace("use_frameworks!", "#use_frameworks!");
+            if (!content.Contains("use_modular_headers!"))
+            {
+                content = content + System.Environment.NewLine + "use_modular_headers!";
+            }
             File.WriteAllText(podPath, content);
         }
 
