@@ -14,27 +14,17 @@ jobs:
     
     runs-on: ubuntu-latest
     steps:
-      - name: Switch to HTTPS git
-        run: |
-          rm -f ~/.gitconfig
-          git config --local --unset url."git@github.com".insteadOf https://github.com || echo "OK"
-          git config --local --unset url."git://".insteadOf https:// || echo "OK"
+      - name: clone main repository
+        uses: actions/checkout@v2
 
-      - uses: actions/checkout@v2
-      - name: Switch to SSH git
-        run: |
-          git config --local --replace-all url."git@github.com".insteadOf https://github.com
-          git config --local --add url."git://".insteadOf https://
-
-      - name: Checkout submodules
-        env:
-            GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
-        run: |
-          eval `ssh-agent -s`      
-          echo "${{secrets.Rollic}}" | ssh-add -
-          git submodule update --init UnityFacebookSDK
-          ssh-add -D     
-          eval `ssh-agent -k`
+      - name: clone submodule
+        uses: actions/checkout@v2
+        with:
+          repository: ezgiustunel/UnityFacebookSDK
+          path: https://github.com/ezgiustunel/UnityFacebookSDK.git
+          ref: v2
+          ssh-key: ${{ secrets.Rollic }}
+          persist-credentials: false
     
     
     
