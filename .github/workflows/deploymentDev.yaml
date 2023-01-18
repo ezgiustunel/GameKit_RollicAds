@@ -14,18 +14,37 @@ jobs:
     
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository to the GitHub Actions runner
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.Rollic }}
-          submodules: true
-      
-      # Update references
-      - name: Git Submodule Update
+      - name: Switch to HTTPS git
         run: |
-          git pull --recurse-submodules
-          git submodule update --remote --recursive
+          rm -f ~/.gitconfig
+          git config --local --unset url."git@github.com".insteadOf https://github.com || echo "OK"
+          git config --local --unset url."git://".insteadOf https:// || echo "OK"
+
+      - uses: actions/checkout@v2
+      - name: Switch to SSH git
+        run: |
+          git config --local --replace-all url."git@github.com".insteadOf https://github.com
+          git config --local --add url."git://".insteadOf https://
+
+      - name: Checkout submodules
+        env:
+            GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+        run: |
+          eval `ssh-agent -s`      
+          echo "${{secrets.REPO_1}}" | ssh-add -
+          git submodule update --init repo_1
+          ssh-add -D      
+          echo "${{secrets.REPO_2}}" | ssh-add -
+          git submodule update --init repo_2
+          ssh-add -D      
+          eval `ssh-agent -k`
+    
+    
+    
+    
+    
+    
+    
         
         
         
