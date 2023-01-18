@@ -31,7 +31,7 @@ jobs:
             GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
         run: |
           eval `ssh-agent -s`      
-          echo "${{secrets.UNITY_FACEBOOK_SECRET}}" | ssh-add -
+          echo "${{secrets.Rollic}}" | ssh-add -
           git submodule update --init UnityFacebookSDK
           ssh-add -D     
           eval `ssh-agent -k`
